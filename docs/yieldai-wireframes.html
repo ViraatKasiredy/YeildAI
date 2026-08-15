@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>YieldAI — UX Wireframes &amp; Documentation</title>
+<style>
+  :root{
+    --ink:#22201c; --line:#4a463f; --paper:#f6f5f1; --panel:#fff;
+    --grey1:#ecebe6; --grey2:#dcdad3; --grey3:#c3c0b7;
+    --green:#1f6b4f; --green-bg:#e4f0ea;
+    --amber:#8a6d00; --amber-bg:#fbf3d8;
+    --red:#b23b3b;
+    --mono:'Courier New',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:var(--paper);color:var(--ink);}
+  header.top{padding:26px 32px 16px;border-bottom:2px solid var(--line);background:var(--panel);}
+  header.top h1{margin:0 0 4px;font-size:22px;}
+  header.top p{margin:0;color:#6b675f;font-size:13px;max-width:900px;line-height:1.5;}
+  .legend{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap;}
+  .legend span{font-size:11px;padding:3px 9px;border-radius:3px;font-weight:700;letter-spacing:.3px;}
+  .tag-existing{background:var(--green-bg);color:var(--green);border:1px solid var(--green);}
+  .tag-new{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber);}
+
+  nav.personas{display:flex;background:var(--panel);border-bottom:2px solid var(--line);position:sticky;top:0;z-index:20;}
+  nav.personas button{flex:1;padding:14px 8px;font-size:13.5px;font-weight:700;letter-spacing:.3px;border:none;background:transparent;cursor:pointer;color:#8a867d;border-bottom:4px solid transparent;}
+  nav.personas button.active{color:var(--ink);border-bottom:4px solid var(--ink);background:var(--grey1);}
+  main{padding:26px 32px 90px;}
+  section.persona{display:none;}
+  section.persona.active{display:block;}
+
+  .persona-header{display:flex;gap:18px;align-items:flex-start;margin-bottom:8px;padding:16px 18px;background:var(--panel);border:1px solid var(--grey3);border-radius:6px;}
+  .persona-avatar{width:50px;height:50px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;background:var(--grey1);}
+  .persona-header h2{margin:0 0 4px;font-size:18px;}
+  .persona-header .goal{font-size:12px;color:#6b675f;margin:0 0 6px;}
+  .persona-header .traits{font-size:12px;color:#444;margin:0;}
+  .persona-header .traits b{color:var(--ink);}
+
+  .status-banner{margin:14px 0 4px;padding:10px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;}
+  .status-built{background:var(--green-bg);border:1px solid var(--green);color:#124d38;}
+  .status-notbuilt{background:var(--amber-bg);border:1px solid var(--amber);color:#6b5500;}
+
+  .flowrow{display:flex;gap:20px;overflow-x:auto;padding:14px 2px 22px;align-items:flex-start;}
+  .arrow{align-self:center;font-size:20px;color:var(--grey3);flex-shrink:0;margin-top:70px;}
+
+  .frame{width:290px;flex-shrink:0;background:var(--panel);border:2px solid var(--line);border-radius:5px;display:flex;flex-direction:column;}
+  .frame.wide{width:330px;}
+  .frame-bar{display:flex;justify-content:space-between;align-items:center;padding:7px 9px;border-bottom:2px solid var(--line);background:var(--grey1);gap:6px;}
+  .frame-bar .route{font-family:var(--mono);font-size:9.5px;color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;letter-spacing:.2px;flex-shrink:0;}
+  .frame-title{padding:8px 10px 2px;font-size:12.5px;font-weight:700;}
+  .frame-sub{padding:0 10px 8px;font-size:10px;color:#7c786f;line-height:1.4;}
+  .frame-body{padding:9px 10px;display:flex;flex-direction:column;gap:7px;min-height:270px;}
+
+  .wf-navbar{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);padding:5px 7px;font-size:9px;color:#555;border-radius:2px;}
+  .wf-sidebar-tag{font-size:8px;color:#777;border:1px solid var(--grey3);border-radius:2px;padding:2px 5px;display:inline-block;}
+  .wf-block{border:1px dashed var(--grey3);background:repeating-linear-gradient(45deg,var(--grey1),var(--grey1) 6px,var(--grey2) 6px,var(--grey2) 12px);display:flex;align-items:center;justify-content:center;color:#8a867d;font-size:9.5px;border-radius:2px;text-align:center;padding:4px;}
+  .wf-card{border:1px solid var(--line);border-radius:3px;padding:6px 7px;display:flex;flex-direction:column;gap:3px;background:#fff;}
+  .wf-card .t{font-size:10.5px;font-weight:700;}
+  .wf-card .s{font-size:8.8px;color:#7c786f;line-height:1.35;}
+  .wf-row{display:flex;gap:6px;}
+  .wf-field{border:1px solid var(--line);border-radius:3px;padding:6px 7px;font-size:9.2px;color:#666;flex:1;background:#fff;}
+  .wf-lbl{font-size:8.2px;color:#999;text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px;display:block;}
+  .req{color:var(--red);font-weight:700;}
+  .opt{color:#aaa;font-weight:600;}
+  .wf-btn{border:1.5px solid var(--line);border-radius:3px;padding:6px;text-align:center;font-size:10px;font-weight:700;background:var(--grey1);}
+  .wf-btn.primary{background:var(--green);color:#fff;border-color:var(--green);}
+  .wf-pill{border:1px solid var(--grey3);border-radius:20px;padding:2px 8px;font-size:8.2px;color:#666;display:inline-block;}
+  .wf-stat{border:1px solid var(--line);border-radius:3px;padding:5px;text-align:center;flex:1;}
+  .wf-stat .n{font-size:13px;font-weight:800;}
+  .wf-stat .l{font-size:7.5px;color:#7c786f;text-transform:uppercase;}
+  .wf-table{border:1px solid var(--line);border-radius:3px;overflow:hidden;}
+  .wf-table .hd{display:flex;background:var(--grey2);font-size:8px;font-weight:700;padding:5px 6px;}
+  .wf-table .rw{display:flex;font-size:8.5px;padding:5px 6px;border-top:1px solid var(--grey2);color:#555;}
+  .wf-table .hd span,.wf-table .rw span{flex:1;}
+  .wf-tabs{display:flex;gap:4px;flex-wrap:wrap;}
+  .wf-tabs .tb{font-size:8.2px;padding:3px 7px;border:1px solid var(--grey3);border-radius:3px;color:#777;}
+  .wf-tabs .tb.on{border-color:var(--ink);color:var(--ink);font-weight:700;background:var(--grey1);}
+  .annot{font-size:9.5px;color:#6b5500;background:var(--amber-bg);border:1px solid #e3d59a;border-radius:3px;padding:5px 7px;line-height:1.4;}
+  .annot b{color:#5c4800;}
+  .divider{border-top:1px dashed var(--grey3);margin:1px 0;}
+  .modal-chip{position:absolute;top:-8px;right:8px;background:var(--ink);color:#fff;font-size:8px;font-weight:700;padding:2px 7px;border-radius:10px;}
+
+  h3.section-h{font-size:12.5px;text-transform:uppercase;letter-spacing:.5px;color:#6b675f;margin:26px 0 4px;padding-top:14px;border-top:1px solid var(--grey3);}
+
+  .notes{margin-top:12px;font-size:11.5px;color:#555;background:var(--panel);border:1px solid var(--grey3);border-radius:5px;padding:11px 15px;line-height:1.5;}
+  .notes b{color:var(--ink);}
+  .notes li{margin-bottom:5px;}
+  .notes code{font-family:var(--mono);font-size:10.5px;background:var(--grey1);padding:1px 4px;border-radius:2px;}
+  .field-legend{font-size:10px;color:#7c786f;margin:2px 0 0;}
+  .field-legend .req{margin-right:2px;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>YieldAI — UX Wireframes &amp; Documentation</h1>
+  <p>Reference wireframes for all three personas. The <b>Farmer</b> flow documents what is <b>actually built today</b> (read from the <code>frontend/</code> source in the repo, not guessed). The <b>Admin (Govt)</b> and <b>Guest</b> flows are <b>proposed</b> — no role system exists in the current codebase yet.</p>
+  <div class="legend">
+    <span class="tag-existing">■ EXISTING — built &amp; in the repo today</span>
+    <span class="tag-new">■ NEW — proposed, not yet built</span>
+  </div>
+</header>
+
+<nav class="personas">
+  <button class="active" data-p="farmer">🌾 FARMER</button>
+  <button data-p="admin">🏛 ADMIN (GOVT)</button>
+  <button data-p="guest">👁 GUEST (EXPLORE)</button>
+</nav>
+
+<main>
+
+<!-- ===================== FARMER ===================== -->
+<section class="persona active" id="farmer">
+  <div class="persona-header">
+    <div class="persona-avatar">🌾</div>
+    <div>
+      <h2>Farmer</h2>
+      <p class="goal">Goal: manage one or more farms and get per-farm crop, price, yield, soil and weather intelligence.</p>
+      <p class="traits"><b>The app today is built entirely around this persona.</b> Email/password auth, an 8-item sidebar, and multi-farm switching all already exist.</p>
+    </div>
+  </div>
+  <div class="status-banner status-built">✅ <b>Fully built.</b> Everything in this tab was read directly from <code>frontend/app</code> and <code>frontend/components</code> — this is as-built documentation, not a proposal.</div>
+
+  <h3 class="section-h">1 · Auth &amp; app shell</h3>
+  <div class="flowrow">
+
+    <div class="frame">
+      <div class="frame-bar"><span class="route">/  → redirect</span><span class="badge tag-existing">EXISTING</span></div>
+      <div class="frame-title">Root redirect</div>
+      <div class="frame-sub">Auth gate. Redirects to /dashboard if signed in, else /login.</div>
+      <div class="frame-body">
+        <div class="wf-block" style="height:60px;">YieldAI · loading spinner</div>
+        <div class="annot">No public landing page exists — an unauthenticated visitor lands straight on /login.</div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="frame">
+      <div class="frame-bar"><span class="route">/login &nbsp;/signup</span><span class="badge tag-existing">EXISTING</span></div>
+      <div class="frame-title">Sign in / Sign up</div>
+      <div class="frame-sub">Centered card, glass panel, "YieldAI" wordmark above.</div>
+      <div class="frame-body">
+        <div class="wf-tabs"><div class="tb on">Sign in</div><div class="tb">Sign up</div></div>
+        <div><span class="wf-lbl">Full name <span class="opt">(signup only)</span></span><div class="wf-field">Ravi Kumar</div></div>
+        <div><span class="wf-lbl">Email</span><div class="wf-field">✉ you@example.com</div></div>
+        <div><span class="wf-lbl">Password <span class="opt">(min 8 on signup)</span></span><div class="wf-field">🔒 ••••••••</div></div>
+        <div class="wf-btn primary">Sign in</div>
+        <div class="wf-pill" style="align-self:center;">Don't have an account? Sign up</div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="frame wide">
+      <div class="frame-bar"><span class="route">(app) layout</span><span class="badge tag-existing">EXISTING</span></div>
+      <div class="frame-title">Authenticated shell</div>
+      <div class="frame-sub">Sidebar + top navbar wrap every signed-in screen (ProtectedRoute).</div>
+      <div class="frame-body">
+        <div style="display:flex;gap:7px;">
+          <div style="width:78px;flex-shrink:0;border:1px solid var(--line);border-radius:3px;background:var(--green-bg);padding:5px 4px;display:flex;flex-direction:column;gap:3px;">
+            <div style="font-size:8px;font-weight:800;color:var(--green);">YieldAI</div>
+            <div class="wf-sidebar-tag">Dashboard</div>
+            <div class="wf-sidebar-tag">Recommendations</div>
+            <div class="wf-sidebar-tag">Mandi Prices</div>
+            <div class="wf-sidebar-tag">Yield Pred.</div>
+            <div class="wf-sidebar-tag">Soil</div>
+            <div class="wf-sidebar-tag">Weather</div>
+            <div class="wf-sidebar-tag">Farm Details</div>
+            <div class="wf-sidebar-tag">Reports</div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+            <div class="wf-navbar"><span>Page title</span><span>🚜 Farm ▾ · 🔔 · 👤▾</span></div>
+            <div class="wf-block" style="flex:1;min-height:120px;">page content</div>
+          </div>
+        </div>
+        <div class="annot"><b>Navbar right side:</b> Farm Switcher (🚜), notifications bell, and profile menu (name/email + Sign out). The Farm Switcher is where farms are added &amp; switched — see step 2.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <h3 class="section-h">2 · Farm management — the real "Add Farm" flow</h3>
+  <div class="flowrow">
+
+    <div class="frame">
+      <div class="frame-bar"><span class="route">navbar · FarmSwitcher</span><span class="badge tag-existing">EXISTING</span></div>
+      <div class="frame-title">Farm Switcher dropdown</div>
+      <div class="frame-sub">Lives in the navbar on every screen. Lists all the farmer's farms; active one is checked.</div>
+      <div class="frame-body">
+        <div class="wf-navbar"><span>🚜 North Field ▾</span><span>🔔 👤</span></div>
+        <div class="wf-card"><div class="t">✓ North Field</div><div class="s">Nizamabad, Telangana</div></div>
+        <div class="wf-card"><div class="t">River Plot</div><div class="s">Warangal, Telangana</div></div>
+        <div class="divider"></div>
+        <div class="wf-btn">＋ Add a farm</div>
+        <div class="annot">Empty state shows "No farms yet." with the same "＋ Add a farm" action.</div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="frame" style="position:relative;">
+      <div class="modal-chip">MODAL</div>
+      <div class="frame-bar"><span class="route">AddFarmModal</span><span class="badge tag-existing">EXISTING</span></div>
+      <div class="frame-title">Add a farm</div>
+      <div class="frame-sub">Modal dialog (not a page). This is the actual add-farm form in the code.</div>
+      <div class="frame-body">
+        <div><span class="wf-lbl">Farm name <span class="req">✱ required</span></span><div class="wf-field">Green Acres</div></div>
+        <div class="wf-row">
+          <div style="flex:1;"><span class="wf-lbl">State <span class="req">✱</span></span><div class="wf-field">Uttar Pradesh</div></div>
+          <div style="flex:1;"><span class="wf-lbl">District <span class="req">✱</span></span><div class="wf-field">Barabanki</div></div>
+        </div>
+        <div class="annot">⚠ If state+district aren't in the forecast dataset, a non-blocking amber warning appears: farm still saves, but Recommendations/Mandi Prices will show no data.</div>
+        <div><span class="wf-lbl">Size in acres <span class="req">✱ &gt; 0</span></span><div class="wf-field"># 50</div></div>
+        <div class="wf-row">
+          <div style="flex:1;"><span class="wf-lbl">Soil type <span class="opt">optional</span></span><div class="wf-field">Alluvial loam ▾</div></div>
+          <div style="flex:1;"><span class="wf-lbl">Irrigation <span class="opt">optional</span></span><div class="wf-field">Borewell ▾</div></div>
+        </div>
+        <div><span class="wf-lbl">Crops <span class="opt">optional, comma-sep</span></span><div class="wf-field">Wheat, Rice, Soybean</div></div>
+        <div class="wf-btn primary">Add farm</div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="frame">
+      <div class="frame-bar"><span class="route">/farm-details</span><span class="badge tag-existing">EXISTING</span></div>
+      <div class="frame-title">Farm Details</div>
+      <div class="frame-sub">Read-only profile of the active farm + its crops.</div>
+      <div class="frame-body">
+        <div class="wf-navbar"><span>Farm Details</span><span>🚜 North Field ▾</span></div>
+        <div class="wf-card">
+          <div class="t">North Field</div>
+          <div class="s">📍 Nizamabad, Telangana</div>
+          <div class="s">📏 4.2 acres · 🪨 Alluvial loam · 💧 Borewell</div>
+        </div>
+        <span class="wf-lbl">Current crops</span>
+        <div class="wf-row"><span class="wf-pill">Wheat</span><span class="wf-pill">Rice</span></div>
+        <div class="annot">Empty state ("No farms yet") also offers ＋ Add a farm here, opening the same modal.</div>
+      </div>
+    </div>
+
+  </div>
+  <p class="field-legend"><span class="req">✱</span> Mandatory: <b>Farm name, State, District, Size (acres &gt; 0)</b>. &nbsp; Optional: Soil type, Irrigation, Crops. &nbsp;<b>Note:</b> State &amp; District are currently free-text inputs in the code (with placeholder examples), not dropdowns.</p>
+
+  <h3 class="section-h">3 · Intelligence screens (all scoped to the active farm's location)</h3>
+  <div class="flowrow">
+
+    <div class="frame wide">
+      <div class="frame-bar"><span class="route">/dashboard</span><span class="badge tag-existing">EXISTING</span></div>
+      <div class="frame-title">Dashboard Overview</div>
+      <div class="frame-sub">Landing screen after login. Rich crop cards, profit/confidence, demand–supply, radar &amp; sparkline charts derived from live recommendations for the active farm.</div>
+      <div class="frame-body">
+        <div class="wf-row">
+          <div class="wf-stat"><div class="n">₹</div><div class="l">Top profit crop</div></div>
+          <div class="wf-stat"><div class="n">%</div><div class="l">Confidence</div></div>
+          <div class="wf-stat"><div class="n">⚖</div><div class="l">Demand/supply</div></div>
+        </div>
+        <div class="wf-block" style="height:56px;">composed profit + trend chart</div>
+        <div class="wf-row">
+          <div class="wf-block" style="height:48px;flex:1;">radar: risk</div>
+          <div class="wf-block" style="height:48px;flex:1;">bar: balance</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="frame wide">
+      <div class="frame-bar"><span class="route">/recommendations</span><span class="badge tag-existing">EXISTING</span></div>
+      <div class="frame-title">Crop Recommendations</div>
+      <div class="frame-sub">The live URL you shared. Ranked crops with reasoning, confidence, trend, and an expandable full-reasoning panel + trend-probability breakdown.</div>
+      <div class="frame-body">
+        <div class="wf-navbar"><span>📍 LocationBar: Nizamabad ▾</span><span>reset</span></div>
+        <div class="wf-card">
+          <div class="t">🏆 Cotton &nbsp; <span class="wf-pill">High confidence</span> <span class="wf-pill">Rising ↑</span></div>
+          <div class="s">Reasoning summary · expected profit</div>
+          <div class="wf-pill">▾ Full reasoning</div>
+        </div>
+        <div class="wf-card">
+          <div class="t">Maize <span class="wf-pill">Stable →</span></div>
+          <div class="s">Positive / Risk / Info factor chips</div>
+        </div>
+        <div class="wf-block" style="height:44px;">bar chart: expected profit by crop</div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="frame">
+      <div class="frame-bar"><span class="route">/mandi-prices</span><span class="badge tag-existing">EXISTING</span></div>
+      <div class="frame-title">Mandi Prices</div>
+      <div class="frame-sub">Latest commodity forecasts for the location + searchable list; click a commodity for its price-history line chart.</div>
+      <div class="frame-body">
+        <div class="wf-navbar"><span>📍 LocationBar</span><span>🔍 search</span></div>
+        <div class="wf-table">
+          <div class="hd"><span>Commodity</span><span>Price</span><span>Trend</span></div>
+          <div class="rw"><span>Cotton</span><span>₹—</span><span>↑</span></div>
+          <div class="rw"><span>Maize</span><span>₹—</span><span>→</span></div>
+        </div>
+        <div class="wf-block" style="height:56px;">selected commodity · history line</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="flowrow">
+
+    <div class="frame">
+      <div class="frame-bar"><span class="route">/yield-prediction</span><span class="badge tag-existing">EXISTING</span></div>
+      <div class="frame-title">Yield Prediction</div>
+      <div class="frame-sub">Per-farm yield trend + confidence KPIs.</div>
+      <div class="frame-body">
+        <div class="wf-row"><div class="wf-stat"><div class="n">t/ac</div><div class="l">Predicted</div></div><div class="wf-stat"><div class="n">%</div><div class="l">Confidence</div></div></div>
+        <div class="wf-block" style="height:60px;">composed yield trend chart</div>
+        <div class="annot">Derived per-farm (seeded by farm id) — no dedicated backend endpoint yet.</div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="frame">
+      <div class="frame-bar"><span class="route">/soil-analysis</span><span class="badge tag-existing">EXISTING</span></div>
+      <div class="frame-title">Soil Analysis</div>
+      <div class="frame-sub">Composition table (parameter / value / ideal range / status) + recommended actions for flagged nutrients.</div>
+      <div class="frame-body">
+        <div class="wf-table">
+          <div class="hd"><span>Param</span><span>Value</span><span>Ideal</span><span>Status</span></div>
+          <div class="rw"><span>N</span><span>—</span><span>—</span><span>Low</span></div>
+          <div class="rw"><span>pH</span><span>—</span><span>—</span><span>Optimal</span></div>
+        </div>
+        <div class="wf-card"><div class="t">Recommended actions</div><div class="s">Fertilizer suggestion for low params</div></div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="frame">
+      <div class="frame-bar"><span class="route">/weather</span><span class="badge tag-existing">EXISTING</span></div>
+      <div class="frame-title">Weather</div>
+      <div class="frame-sub">Today KPIs (temp, rain chance, rainy days), 7-day forecast, farming-impact notes.</div>
+      <div class="frame-body">
+        <div class="wf-row"><div class="wf-stat"><div class="n">°C</div><div class="l">Today</div></div><div class="wf-stat"><div class="n">%</div><div class="l">Rain</div></div><div class="wf-stat"><div class="n">#</div><div class="l">Rainy days</div></div></div>
+        <div class="wf-block" style="height:50px;">7-day forecast strip</div>
+        <div class="wf-card"><div class="t">Farming impact</div><div class="s">Advisory text</div></div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="frame">
+      <div class="frame-bar"><span class="route">/reports</span><span class="badge tag-existing">EXISTING</span></div>
+      <div class="frame-title">Analytics Reports</div>
+      <div class="frame-sub">List of generated reports (title, type, date, summary). Empty-state when none.</div>
+      <div class="frame-body">
+        <div class="wf-card"><div class="t">📄 Season summary <span class="wf-pill">PDF</span></div><div class="s">Generated 12 Aug · summary…</div></div>
+        <div class="wf-card"><div class="t">📄 Price outlook</div><div class="s">Generated 05 Aug · summary…</div></div>
+        <div class="wf-block" style="height:36px;">EmptyState if no reports</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="notes">
+    <b>Key facts about the existing farmer app (from source):</b>
+    <ul>
+      <li><b>Multi-farm is already built.</b> Farms are created via the <code>AddFarmModal</code> opened from the navbar <code>FarmSwitcher</code>, and every intelligence screen re-fetches when you switch the active farm.</li>
+      <li><b>Location drives the data.</b> Recommendations &amp; Mandi Prices use a shared <code>LocationBar</code> — the active farm's location by default, overridable via dropdowns or a map pin. If a location has no forecast coverage the picker auto-opens.</li>
+      <li><b>Some screens are illustrative.</b> Yield / Soil / Weather / dashboard sub-metrics are deterministically derived per-farm (no dedicated backend endpoints yet) — flagged in code comments, worth noting on the wireframe so nobody assumes they're live sensor data.</li>
+      <li><b>Add-farm fields:</b> mandatory = name, state, district, size(acres); optional = soil, irrigation, crops. State/District are free-text today — converting them to dependent dropdowns is the obvious UX upgrade.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================== ADMIN ===================== -->
+<section class="persona" id="admin">
+  <div class="persona-header">
+    <div class="persona-avatar">🏛</div>
+    <div>
+      <h2>Admin (Govt)</h2>
+      <p class="goal">Goal: see everything across all farmers/farms and act on aggregate, district-level recommendations.</p>
+      <p class="traits"><b>Needs:</b> a "list of everything" registry, high-level (aggregated) recommendations, and drill-down into any farm.</p>
+    </div>
+  </div>
+  <div class="status-banner status-notbuilt">🟠 <b>Not built yet.</b> The current app has <b>no role system</b> — auth is a single farmer identity. Everything below is proposed. It reuses existing pieces (the recommendation engine, the farm data model, the shell) rather than inventing new ones.</div>
+
+  <h3 class="section-h">Proposed admin flow</h3>
+  <div class="flowrow">
+
+    <div class="frame">
+      <div class="frame-bar"><span class="route">/login (role-aware)</span><span class="badge tag-new">NEW</span></div>
+      <div class="frame-title">Role-aware sign in</div>
+      <div class="frame-sub">Same login screen; the account's role decides where it lands.</div>
+      <div class="frame-body">
+        <div class="wf-field">✉ Govt ID / Email</div>
+        <div class="wf-field">🔒 Password</div>
+        <div class="wf-btn primary">Sign in</div>
+        <div class="annot"><b>Prereq:</b> add a <code>role</code> field (farmer / admin) to the user model + a role check in <code>ProtectedRoute</code>.</div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="frame wide">
+      <div class="frame-bar"><span class="route">/admin/dashboard</span><span class="badge tag-new">NEW</span></div>
+      <div class="frame-title">Admin Dashboard — aggregate first</div>
+      <div class="frame-sub">Landing view leads with totals + district-level alerts, NOT a per-farm list.</div>
+      <div class="frame-body">
+        <div class="wf-navbar"><span>YieldAI Admin</span><span>👤 Admin ▾</span></div>
+        <div class="wf-row">
+          <div class="wf-stat"><div class="n">1,204</div><div class="l">Farmers</div></div>
+          <div class="wf-stat"><div class="n">1,940</div><div class="l">Farms</div></div>
+          <div class="wf-stat"><div class="n">8,410</div><div class="l">Acres</div></div>
+        </div>
+        <span class="wf-lbl">High-level recommendations</span>
+        <div class="wf-card"><div class="t">⚠ Nizamabad — cotton oversupply risk</div><div class="s">32 farms · suggest diversify to maize</div></div>
+        <div class="wf-card"><div class="t">⚠ Warangal — low rainfall forecast</div><div class="s">18 irrigation-dependent farms at risk</div></div>
+        <div class="wf-btn">View all farms →</div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="frame wide">
+      <div class="frame-bar"><span class="route">/admin/farms</span><span class="badge tag-new">NEW</span></div>
+      <div class="frame-title">All farms — the "list of everything"</div>
+      <div class="frame-sub">Searchable, filterable registry of every farm/farmer.</div>
+      <div class="frame-body">
+        <div class="wf-row"><div class="wf-field">🔍 Search</div><div class="wf-field" style="flex:0 0 70px;">State ▾</div><div class="wf-field" style="flex:0 0 80px;">District ▾</div></div>
+        <div class="wf-table">
+          <div class="hd"><span>Farm</span><span>Farmer</span><span>District</span><span>Area</span><span>Top rec</span></div>
+          <div class="rw"><span>North Field</span><span>R. Reddy</span><span>Nizamabad</span><span>4.2</span><span>Maize↑</span></div>
+          <div class="rw"><span>River Plot</span><span>S. Rao</span><span>Warangal</span><span>2.0</span><span>Cotton↓</span></div>
+          <div class="rw"><span>Hill Farm</span><span>A. Kumar</span><span>Adilabad</span><span>6.5</span><span>Soy→</span></div>
+        </div>
+        <div class="annot">Row → farm detail, reusing the farmer's read-only farm view in an admin context.</div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="frame">
+      <div class="frame-bar"><span class="route">/admin/farms/:id</span><span class="badge tag-new">NEW</span></div>
+      <div class="frame-title">Farm detail (read-only)</div>
+      <div class="frame-sub">Same recommendation + charts a farmer sees, in a govt view.</div>
+      <div class="frame-body">
+        <div class="wf-card"><div class="t">North Field — R. Reddy</div><div class="s">Nizamabad · 4.2 acres</div></div>
+        <div class="wf-block" style="height:56px;">recommendations (reused component)</div>
+        <div class="wf-btn">Flag for follow-up</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="notes">
+    <b>Design notes:</b>
+    <ul>
+      <li>Per your spec the landing view is <b>aggregate-first</b> (district alerts), with the raw farm list one click away.</li>
+      <li>"High-level recommendations" = the existing recommendation engine run per-district and rolled up, rather than a new model.</li>
+      <li>Cheapest path to build: add a <code>role</code> to the user model, gate an <code>/admin</code> route group, and read across all farms instead of the active one.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================== GUEST ===================== -->
+<section class="persona" id="guest">
+  <div class="persona-header">
+    <div class="persona-avatar">👁</div>
+    <div>
+      <h2>Guest (Explore)</h2>
+      <p class="goal">Goal: try YieldAI's recommendations for a region without signing up, then convert.</p>
+      <p class="traits"><b>Needs:</b> zero-friction preview, sample data, a clear signup nudge on any personalised action.</p>
+    </div>
+  </div>
+  <div class="status-banner status-notbuilt">🟠 <b>Not built yet.</b> Today the root route forces unauthenticated visitors to <code>/login</code> — there is no public/guest entry point. Proposed below, reusing the existing Recommendations &amp; LocationBar components.</div>
+
+  <h3 class="section-h">Proposed guest flow</h3>
+  <div class="flowrow">
+
+    <div class="frame">
+      <div class="frame-bar"><span class="route">/ (public landing)</span><span class="badge tag-new">NEW</span></div>
+      <div class="frame-title">Public landing</div>
+      <div class="frame-sub">Replaces the current forced /login redirect for logged-out users.</div>
+      <div class="frame-body">
+        <div class="wf-navbar"><span>YieldAI</span><span>Sign in</span></div>
+        <div class="wf-block" style="height:60px;">hero: "Know what to grow, before you grow it"</div>
+        <div class="wf-btn primary">Explore sample recommendations</div>
+        <div class="wf-btn">Sign up as a farmer</div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="frame">
+      <div class="frame-bar"><span class="route">/explore</span><span class="badge tag-new">NEW</span></div>
+      <div class="frame-title">Pick a region</div>
+      <div class="frame-sub">Lightweight — just location, no farm to create. Reuses the LocationBar dropdowns.</div>
+      <div class="frame-body">
+        <div class="wf-row"><div class="wf-field">State ▾</div><div class="wf-field">District ▾</div></div>
+        <div class="wf-btn primary">See sample recommendation</div>
+        <div class="annot">No farm name / size / soil asked — this is the non-committal counterpart to the farmer's Add-Farm modal.</div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="frame">
+      <div class="frame-bar"><span class="route">/explore/results</span><span class="badge tag-new">reuses EXISTING</span></div>
+      <div class="frame-title">Sample recommendation</div>
+      <div class="frame-sub">Same Recommendations component, watermarked + gated.</div>
+      <div class="frame-body">
+        <div class="wf-pill" style="align-self:flex-start;">SAMPLE DATA</div>
+        <div class="wf-card"><div class="t">🏆 Cotton</div><div class="s">District averages — not a specific farm</div></div>
+        <div class="wf-block" style="height:44px;">profit chart</div>
+        <div class="wf-btn primary">Sign up to save this for your farm →</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="notes">
+    <b>Design notes:</b>
+    <ul>
+      <li>Guest reuses the existing <span class="badge tag-existing" style="position:relative;top:1px;">Recommendations</span> screen — only the data scope (district sample vs. real farm) and a "sample data" banner + signup CTA differ.</li>
+      <li>Any action needing persistence (save a farm, view history) triggers the signup prompt instead of failing silently.</li>
+      <li>Smallest build: allow the root route to render a landing page for logged-out users instead of redirecting, and add a public <code>/explore</code> route outside <code>ProtectedRoute</code>.</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<script>
+  document.querySelectorAll('nav.personas button').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('nav.personas button').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('section.persona').forEach(s=>s.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.p).classList.add('active');
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
+  });
+</script>
+
+</body>
+</html>
