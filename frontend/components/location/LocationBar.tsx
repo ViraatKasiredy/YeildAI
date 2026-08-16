@@ -11,7 +11,9 @@ const sourceLabels: Record<EffectiveLocation['source'], string> = {
     farm: 'Farm location',
     map: 'Map pin',
     manual: 'Manual selection',
+    current: 'Current location',
     default: 'Default location',
+    none: 'No location chosen',
 };
 
 /**
@@ -90,7 +92,9 @@ export function LocationBar({
                 <div className="flex flex-wrap items-center gap-2 text-sm text-stone-700">
                     <MapPin size={15} className="text-stone-400" />
                     <span className="font-medium">
-                        {effectiveLocation.district}, {effectiveLocation.state}
+                        {effectiveLocation.source === 'none'
+                            ? 'No location chosen'
+                            : `${effectiveLocation.district}, ${effectiveLocation.state}`}
                     </span>
                     <span
                         className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium"
@@ -137,6 +141,11 @@ export function LocationBar({
             {farmLocationStatus === 'no-farm' && effectiveLocation.source === 'default' && (
                 <p className="mt-2 text-xs text-stone-500">
                     No farm selected — showing the default location. Add a farm or pick one below.
+                </p>
+            )}
+            {effectiveLocation.source === 'none' && (
+                <p className="mt-2 text-xs text-stone-500">
+                    No location chosen yet. Pick a state and district below to see data — nothing is assumed for you.
                 </p>
             )}
 

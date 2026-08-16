@@ -18,8 +18,6 @@ import {
   ChevronDown,
   ChevronUp,
   Info,
-  MapPin,
-  PlusCircle,
 } from 'lucide-react';
 
 import { Card } from '@/components/ui/Card';
@@ -27,6 +25,7 @@ import { Loading, ErrorView } from '@/components/ui/States';
 import { PageWrapper } from '@/components/layout/PageWrapper';
 import { TrendBadge, ConfidenceBadge } from '@/components/ui/Badge';
 import { LocationBar } from '@/components/location/LocationBar';
+import { PickLocationState } from '@/components/location/PickLocationState';
 import { getRecommendations } from '@/lib/dataService';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useEffectiveLocation } from '@/lib/useEffectiveLocation';
@@ -295,43 +294,6 @@ function FullReasoningToggle({
   );
 }
 
-function NoFarmState() {
-  return (
-    <PageWrapper title="Crop Recommendations">
-      <Card title='Recommendations'>
-        <div className="py-14 text-center">
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
-            <MapPin className="h-8 w-8 text-emerald-600" />
-          </div>
-
-          <h2 className="text-xl font-semibold text-stone-800">
-            Add a farm to see crop recommendations
-          </h2>
-
-          <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-stone-500">
-            Crop recommendations are generated for a specific
-            farm based on its location and market conditions.
-            Add a farm to see which crops are recommended for you.
-          </p>
-
-          <button
-            type="button"
-            onClick={() => {
-              window.dispatchEvent(
-                new CustomEvent('open-add-farm')
-              );
-            }}
-            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-emerald-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-800"
-          >
-            <PlusCircle className="h-4 w-4" />
-            Add your first farm
-          </button>
-        </div>
-      </Card>
-    </PageWrapper>
-  );
-}
-
 export default function RecommendationsPage() {
   const { activeFarm } = useAuth();
 
@@ -374,11 +336,13 @@ export default function RecommendationsPage() {
   };
 
   /*
-   * Only fetch recommendations when a real active farm exists
-   * and a valid farm location is available.
+   * Fetch recommendations for whatever the effective location resolves to —
+   * the active farm, an override, or a session-chosen current location. When
+   * nothing is chosen (source 'none'), state/district are empty and we never
+   * fetch; the pick-a-location empty state is shown instead.
    */
   useEffect(() => {
-    if (!activeFarm || !state || !district) {
+    if (!state || !district) {
       setData(null);
       setLoading(false);
       setError(null);
@@ -412,7 +376,7 @@ export default function RecommendationsPage() {
       });
 
     return () => controller.abort();
-  }, [activeFarm, state, district]);
+  }, [state, district]);
 
   const chartData = useMemo(
     () =>
@@ -448,13 +412,18 @@ export default function RecommendationsPage() {
   );
 
   /*
-   * No farm = no recommendations page content.
-   *
-   * This is intentionally before loading/error states so a user
-   * without a farm does not see a loading screen or an error.
+   * No location chosen (no farm and no session-chosen current location).
+   * Before loading/error so the user sees a pick-a-location prompt — with the
+   * LocationBar's picker available — instead of a spinner, an error, or
+   * recommendations for a location the app invented.
    */
-  if (!activeFarm) {
-    return <NoFarmState />;
+  if (effectiveLocation.source === 'none') {
+    return (
+      <PageWrapper title="Crop Recommendations">
+        {locationBar}
+        <PickLocationState kind="recommendations" />
+      </PageWrapper>
+    );
   }
 
   if (loading) {

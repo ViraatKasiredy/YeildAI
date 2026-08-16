@@ -28,7 +28,9 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       await login(email, password);
-      router.push('/dashboard');
+      // Land on the post-login gate, not the dashboard: the user consciously
+      // confirms their farm or chooses a location before seeing recommendations.
+      router.push('/start');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not sign in. Check your email and password.');
     } finally {
