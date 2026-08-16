@@ -212,11 +212,14 @@ export type LocationMatchStatus = 'idle' | 'loading' | 'success' | 'partial' | '
  * The "effective location" model used by Recommendations and Mandi Prices to
  * decide which state/district to fetch data for.
  *
- * Precedence: an explicit override (map pin or manual dropdown pick) always
- * wins over the active farm's location, which in turn wins over the
- * hardcoded DEFAULT_LOCATION (used only when there's no farm at all).
+ * Precedence: an explicit override (map pin or manual dropdown pick) wins over
+ * the active farm's location, which wins over a session-scoped 'current'
+ * location the user explicitly chose (geolocation or manual pick), which wins
+ * over the hardcoded 'default' — and the default is opt-in only. When nothing
+ * resolves, the source is 'none' (empty state/district) meaning "no location
+ * chosen; ask the user" — the app never invents a location.
  */
-export type LocationSource = 'farm' | 'map' | 'manual' | 'default';
+export type LocationSource = 'farm' | 'map' | 'manual' | 'current' | 'default' | 'none';
 
 export interface EffectiveLocation {
     state: string;

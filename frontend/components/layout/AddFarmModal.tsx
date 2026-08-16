@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { getLocations, reverseGeocode } from '@/lib/dataService';
 import { findSupportedMatch } from '@/lib/location';
 import { estimateSoilAndIrrigation } from '@/lib/soilLookup';
+import type { FarmProfile } from '@/lib/auth/types';
 import type { Location, LocationMatchStatus, ReverseGeocodeResult, SelectedCoordinates } from '@/lib/types';
 
 const LocationMap = dynamic(() => import('@/components/map/LocationMap'), {
@@ -71,14 +72,40 @@ const inputClass = (hasError: boolean) =>
       : 'border-stone-200 focus:border-emerald-400'
   }`;
 
-export function AddFarmModal({ onClose }: { onClose: () => void }) {
-  const { addFarm } = useAuth();
+/**
+ * Builds a synthetic ReverseGeocodeResult from an existing farm so that, in
+ * edit mode, the location is pre-resolved and the user isn't forced to re-pick
+ * it on the map just to change (say) the farm's size.
+ */
+function seedGeocodeFromFarm(farm: FarmProfile): ReverseGeocodeResult {
+  return {
+    latitude: farm.latitude ?? 0,
+    longitude: farm.longitude ?? 0,
+    displayName: farm.address ?? farm.location ?? null,
+    state: farm.state,
+    district: farm.district,
+    country: 'India',
+    source: 'nominatim',
+    matchedState: farm.state,
+    matchedDistrict: farm.district,
+    isSupportedLocation: true,
+  };
+}
 
-  const [name, setName] = useState('');
-  const [address, setAddress] = useState('');
-  const [pincode, setPincode] = useState('');
-  const [sizeAcres, setSizeAcres] = useState('');
-  const [crops, setCrops] = useState('');
+/**
+ * Add-or-edit farm modal. Passing a `farm` switches it to edit mode: fields
+ * are pre-filled, the location is pre-resolved from the farm, and submitting
+ * calls editFarm instead of addFarm.
+ */
+export function AddFarmModal({ onClose, farm = null }: { onClose: () => void; farm?: FarmProfile | null }) {
+  const { addFarm, editFarm } = useAuth();
+  const isEdit = farm !== null;
+
+  const [name, setName] = useState(() => farm?.name ?? '');
+  const [address, setAddress] = useState(() => farm?.address ?? '');
+  const [pincode, setPincode] = useState(() => farm?.pincode ?? '');
+  const [sizeAcres, setSizeAcres] = useState(() => (farm ? String(farm.sizeAcres) : ''));
+  const [crops, setCrops] = useState(() => (farm ? farm.crops.join(', ') : ''));
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -103,9 +130,19 @@ export function AddFarmModal({ onClose }: { onClose: () => void }) {
   }
 
   // --- Map-based location picking (required) -------------------------------
-  const [pin, setPin] = useState<SelectedCoordinates | null>(null);
-  const [geocodeStatus, setGeocodeStatus] = useState<LocationMatchStatus>('idle');
-  const [geocodeResult, setGeocodeResult] = useState<ReverseGeocodeResult | null>(null);
+  // In edit mode the location is seeded from the existing farm so it counts as
+  // already-resolved; the user can still drop a new pin to move it.
+  const [pin, setPin] = useState<SelectedCoordinates | null>(() =>
+    farm && farm.latitude != null && farm.longitude != null
+      ? { latitude: farm.latitude, longitude: farm.longitude }
+      : null
+  );
+  const [geocodeStatus, setGeocodeStatus] = useState<LocationMatchStatus>(() =>
+    farm && farm.state ? 'success' : 'idle'
+  );
+  const [geocodeResult, setGeocodeResult] = useState<ReverseGeocodeResult | null>(() =>
+    farm && farm.state ? seedGeocodeFromFarm(farm) : null
+  );
   const [geocodeError, setGeocodeError] = useState<string | null>(null);
 
   // A location only "counts" once it has been resolved to a state/district
@@ -118,6 +155,14 @@ export function AddFarmModal({ onClose }: { onClose: () => void }) {
   const resolvedDistrict = geocodeResult?.district ?? null;
 
   const soilAndIrrigation = resolvedState ? estimateSoilAndIrrigation(resolvedState, resolvedDistrict ?? undefined) : null;
+
+  // In edit mode, if the location wasn't changed, keep the farm's stored soil
+  // and irrigation (which may have been refined) rather than overwriting them
+  // with a fresh regional estimate.
+  const locationUnchanged = isEdit && !!farm && resolvedState === farm.state && resolvedDistrict === farm.district;
+  const displaySoil = locationUnchanged && farm
+    ? { soilType: farm.soilType, irrigation: farm.irrigation }
+    : soilAndIrrigation;
 
   const locationError =
     (submitAttempted && !locationResolved)
@@ -175,13 +220,13 @@ export function AddFarmModal({ onClose }: { onClose: () => void }) {
     setError(null);
     setSubmitAttempted(true);
 
-    if (!isFormValid || !resolvedState || !resolvedDistrict || !soilAndIrrigation) {
+    if (!isFormValid || !resolvedState || !resolvedDistrict || !displaySoil) {
       return;
     }
 
     setSubmitting(true);
     try {
-      await addFarm({
+      const payload = {
         name: name.trim(),
         location: `${resolvedDistrict}, ${resolvedState}`,
         address: address.trim() || undefined,
@@ -191,16 +236,27 @@ export function AddFarmModal({ onClose }: { onClose: () => void }) {
         state: resolvedState,
         district: resolvedDistrict,
         sizeAcres: Number(sizeAcres),
-        soilType: soilAndIrrigation.soilType,
-        irrigation: soilAndIrrigation.irrigation,
+        soilType: displaySoil.soilType,
+        irrigation: displaySoil.irrigation,
         crops: crops
           .split(',')
           .map((c) => c.trim())
           .filter(Boolean),
-      });
+      };
+      if (isEdit && farm) {
+        await editFarm(farm.id, payload);
+      } else {
+        await addFarm(payload);
+      }
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not create farm. Please try again.');
+      setError(
+        err instanceof Error
+          ? err.message
+          : isEdit
+            ? 'Could not save changes. Please try again.'
+            : 'Could not create farm. Please try again.'
+      );
     } finally {
       setSubmitting(false);
     }
@@ -214,7 +270,9 @@ export function AddFarmModal({ onClose }: { onClose: () => void }) {
       >
         <div className="flex items-center justify-between border-b border-stone-100 px-6 py-4">
           <div>
-            <h3 className="font-[var(--font-display)] text-lg text-[var(--forest-900)]">Add a farm</h3>
+            <h3 className="font-[var(--font-display)] text-lg text-[var(--forest-900)]">
+              {isEdit ? 'Edit farm details' : 'Add a farm'}
+            </h3>
             <p className="mt-0.5 text-xs text-stone-400">
               <span className="text-red-500">*</span> indicates a required field
             </p>
@@ -375,7 +433,7 @@ export function AddFarmModal({ onClose }: { onClose: () => void }) {
                     <Sprout className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
                     <div>
                       <div className="text-xs font-medium text-stone-800">
-                        Soil type: {soilAndIrrigation?.soilType}
+                        Soil type: {displaySoil?.soilType}
                       </div>
                       <div className="text-[11px] text-stone-400">Extracted from {resolvedDistrict}, {resolvedState}</div>
                     </div>
@@ -384,7 +442,7 @@ export function AddFarmModal({ onClose }: { onClose: () => void }) {
                     <Droplets className="mt-0.5 h-4 w-4 shrink-0 text-sky-600" />
                     <div>
                       <div className="text-xs font-medium text-stone-800">
-                        Suggested irrigation: {soilAndIrrigation?.irrigation}
+                        Suggested irrigation: {displaySoil?.irrigation}
                       </div>
                       <div className="text-[11px] text-stone-400">Best-suited estimate for this region</div>
                     </div>
@@ -413,7 +471,7 @@ export function AddFarmModal({ onClose }: { onClose: () => void }) {
             disabled={submitting}
             className="mt-5 w-full rounded-lg bg-emerald-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-900 disabled:opacity-60"
           >
-            {submitting ? 'Adding…' : 'Add farm'}
+            {submitting ? (isEdit ? 'Saving…' : 'Adding…') : isEdit ? 'Save changes' : 'Add farm'}
           </button>
         </form>
       </div>

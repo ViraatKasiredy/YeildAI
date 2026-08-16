@@ -57,14 +57,45 @@ describe('resolveFarmLocationStatus', () => {
 });
 
 describe('resolveEffectiveLocation', () => {
-    it('falls back to DEFAULT_LOCATION when there is no farm and no override', () => {
+    it("resolves to 'none' (never invents a location) when there is no farm, override, or current location", () => {
         const result = resolveEffectiveLocation({ farm: null, override: null, locations: SUPPORTED_LOCATIONS });
+        expect(result).toEqual({ state: '', district: '', source: 'none', isSupported: null });
+    });
+
+    it('falls back to DEFAULT_LOCATION only when default is explicitly opted in', () => {
+        const result = resolveEffectiveLocation({
+            farm: null,
+            override: null,
+            locations: SUPPORTED_LOCATIONS,
+            allowDefault: true,
+        });
         expect(result).toEqual({
             state: DEFAULT_LOCATION.state,
             district: DEFAULT_LOCATION.district,
             source: 'default',
             isSupported: true,
         });
+    });
+
+    it('uses a session-chosen current location (tier 3) over the default', () => {
+        const result = resolveEffectiveLocation({
+            farm: null,
+            override: null,
+            current: { state: 'Maharashtra', district: 'Nashik' },
+            locations: SUPPORTED_LOCATIONS,
+            allowDefault: true,
+        });
+        expect(result).toEqual({ state: 'Maharashtra', district: 'Nashik', source: 'current', isSupported: true });
+    });
+
+    it('prefers the farm location over a session-chosen current location', () => {
+        const result = resolveEffectiveLocation({
+            farm: { state: 'Uttar Pradesh', district: 'Barabanki' },
+            override: null,
+            current: { state: 'Maharashtra', district: 'Nashik' },
+            locations: SUPPORTED_LOCATIONS,
+        });
+        expect(result).toEqual({ state: 'Uttar Pradesh', district: 'Barabanki', source: 'farm', isSupported: true });
     });
 
     it('uses the farm location when present and no override is active', () => {

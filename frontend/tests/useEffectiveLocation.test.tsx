@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 
 import { useEffectiveLocation } from '../lib/useEffectiveLocation';
-import { DEFAULT_LOCATION } from '../lib/mockData';
 import type { FarmProfile } from '../lib/auth/types';
 import type { Location } from '../lib/types';
 
@@ -135,22 +134,21 @@ describe('useEffectiveLocation', () => {
         });
     });
 
-    it('produces no valid effective location for a blank farm location', async () => {
-        // Excludes DEFAULT_LOCATION from the supported list so the fallback
-        // default (used when the farm has no location at all) is itself
-        // unsupported — otherwise a coincidental match would mask the bug
-        // this test guards against.
-        vi.mocked(getLocations).mockResolvedValueOnce([{ state: 'Maharashtra', district: 'Nashik' }]);
+    it("resolves to 'none' for a blank farm location — never invents a default", async () => {
+        // The hook defaults allowDefault to false, so a farm with no usable
+        // location and no session-chosen current location must resolve to the
+        // 'none' state (empty state/district) rather than the hardcoded
+        // DEFAULT_LOCATION. This is the core "never invent a location" fix.
         const farm = makeFarm({ id: 'farm-a', state: '', district: '' });
         const { result } = renderHook(() => useEffectiveLocation(farm));
         await waitFor(() => expect(result.current.locations).not.toBeNull());
 
         expect(result.current.farmLocationStatus).toBe('missing');
         expect(result.current.effectiveLocation).toEqual({
-            state: DEFAULT_LOCATION.state,
-            district: DEFAULT_LOCATION.district,
-            source: 'default',
-            isSupported: false,
+            state: '',
+            district: '',
+            source: 'none',
+            isSupported: null,
         });
     });
 
